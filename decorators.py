@@ -5,14 +5,15 @@ except ImportError:
 
 from admob.helpers import set_admob_cookie, admob_analytics
 
+
 def analytics(view):
-    "Alter the response of a view to include an admob cookie."
+    """
+    Construct an AdMob analytics request and set the AdMob cookie on the response.
+    
+    """
     def _dec(request, *args, **kwargs):
-        am = admob_analytics(request, params=None, fail_silently=False)
-        
-        print "AM: %s" % am
-        
+        admob_analytics(request, params=None, fail_silently=False)
         response = view(request, *args, **kwargs)
-        response = set_admob_cookie(response, request)
+        response = set_admob_cookie(request , response)
         return response
     return _dec

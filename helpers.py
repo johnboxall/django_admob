@@ -37,13 +37,13 @@ from django.utils.http import cookie_date
 from django.contrib.sites.models import Site
  
 ENDPOINT = "http://r.admob.com/ad_source.php"
-TIMEOUT = 1  # Timeout in seconds
-PUBCODE_VERSION = None # not sure what to put here
+TIMEOUT = 1  # Timeout in seconds.
+PUBCODE_VERSION = None # Not sure what to put here??? 
 PUBLISHER_ID = getattr(settings, 'ADMOB_PUBLISHER_ID')
 ANALYTICS_ID = getattr(settings, 'ADMOB_ANALYTICS_ID')
 COOKIE_PATH = getattr(settings, 'ADMOB_COOKIE_PATH', '/')
 COOKIE_DOMAIN = getattr(settings, 'ADMOB_COOKIE_DOMAIN', None)
-# Rework for Django?
+# Need to be reworked for Django???
 IGNORE_HEADERS = [
     'HTTP_PRAGMA', 
     'HTTP_CACHE_CONTROL',
@@ -61,7 +61,7 @@ class AdMobError(Exception):
 class AdMob(object):
     def __init__(self, request, params=None, fail_silently=False):
         self.request = request
-        self.session_id = request.session.get(settings.SESSION_COOKIE_NAME, None)
+        self.session_id = getattr(request.session, 'session_key', None)
         self.params = params or {}
         self.fail_silently = fail_silently
 
@@ -75,11 +75,9 @@ class AdMob(object):
         self.analytics_request = self.params.get("analytics_request", False)
         self.ad_request = self.params.get("ad_request", True)
         
-        
         print "analytics_request: %s" % repr(self.analytics_request)
         print "ad_request: %s" % repr(self.ad_request)
 
-        
         self.request_type = {
             (False, False): None,
             (True, False): 0,
@@ -142,7 +140,7 @@ class AdMob(object):
         original_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(TIMEOUT)
         try:
-            self.response = urllib2.urlopen(ENDPOINT, urllib.urlencode(self.params))
+            self.response = urllib2.urlopen(ENDPOINT, urllib.urlencode(self.post_data))            
             return self.response.read()
         except urllib2.HTTPError, e:
             if self.fail_silently:
@@ -151,8 +149,15 @@ class AdMob(object):
                 raise e
         finally:
             socket.setdefaulttimeout(original_timeout)
-            print 'yup!'
-            
+
+def admob_ad(request, params=None, fail_silently=False):
+    params = params or {}
+    params.update({'analytics_request': False, 'ad_request': True})
+    admob = AdMob(request, params, fail_silently)
+    admob.build_post_data()
+    return admob.fetch()
+
+
 def admob_analytics(request, params=None, fail_silently=False):
     params = params or {}
     params.update({'analytics_request': True, 'ad_request': False})
@@ -160,18 +165,15 @@ def admob_analytics(request, params=None, fail_silently=False):
     admob.build_post_data()
     return admob.fetch()
 
-
-def set_admob_cookie(response, request, params=None):
+def set_admob_cookie(request, response, params=None):
     """
     Given a `response` and `request` set an AdMob cookie.
     
     """
     params = params or {}
-
     # Don't make a new cookie if one already exists    
     if 'admobuu' in request.COOKIES:
         return response
-
     # Make a new cookie
     s = "%f%s%s%f" % (
         random.random(),
