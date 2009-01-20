@@ -36,12 +36,11 @@ class AnalyticsMaybeAd(template.Node):
         # Just an Ad
         else:
             return admob_analytics(context['request'], params=None, fail_silently=False)
-            
+
 def do_analyticsmaybead(parser, token):
     bits = token.contents.split()
     if len(bits) != 2:
         raise TemplateSyntaxError, "admob_if_ad tag takes exactly one argument"
     return AnalyticsMaybeAd(bits[1])
 register.tag('abmob_analytics_maybe_ad', do_analyticsmaybead)
-    
     

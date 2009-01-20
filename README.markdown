@@ -19,7 +19,7 @@ Usage:
           'admob.middleware.AdMobMiddleware',
           ...
         )
-        
+
 1. Add AdMob settings in settings.py:
 
         # Required Settings:

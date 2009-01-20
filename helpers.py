@@ -145,52 +145,16 @@ class AdMob(object):
             socket.setdefaulttimeout(original_timeout)
 
 
-def admob(request, params=None, fail_silently=False):
-    "AdMob ad/analtyics"
-    params = params or {}
-    params.update({'analytics_request': True, 'ad_request': True})
-    admob = AdMob(request, params, fail_silently)
-    admob.build_post_data()
-    return admob.fetch()
-
-
-def admob_ad(request, params=None, fail_silently=False):
-    """
-    Request an AdMob ad.
-    
-    """
-    params = params or {}
-    params.update({'analytics_request': False, 'ad_request': True})
-    admob = AdMob(request, params, fail_silently)
-    admob.build_post_data()
-    return admob.fetch()
-
-
-def admob_analytics(request, params=None, fail_silently=False):
-    """
-    Request AdMob analytics.
-    
-    """
-    params = params or {}
-    params.update({'analytics_request': True, 'ad_request': False})
-    admob = AdMob(request, params, fail_silently)
-    admob.build_post_data()
-    return admob.fetch()
-
 def set_admob_cookie(request, response, params=None):
     """
     Given a `response` and `request` set an AdMob cookie.
     
     """
     params = params or {}
-        
-    # Don't make a new cookie if one already exists    
+    # Don't make a new cookie if one already exists
     if 'admobuu' in request.COOKIES:
         return response
-        
     # Make a new cookie
-
-    # Try to get `admobuu` out of `request`.
     if hasattr(request, 'admobuu'):
         value = request.admobuu
     else:
@@ -210,3 +174,21 @@ def _admob_cookie_value(request):
         time.time()
     )
     return md5_constructor(s).hexdigest()
+    
+def admob(request, params=None, fail_silently=False):
+    "Ad and Analytics."
+    return _admob(request, dict(analytics_request=True, ad_request=True), fail_silently)
+
+def admob_ad(request, params=None, fail_silently=False):
+    "Ad only."
+    return _admob(request, dict(analytics_request=False, ad_request=True), fail_silently)
+
+def admob_analytics(request, fail_silently=False):
+    "Analytics only."
+    return _admob(request, dict(analytics_request=True, ad_request=False), fail_silently)
+
+def _admob(request, params=None, fail_silently=False):
+    params = params or {}
+    admob = AdMob(request, params, fail_silently)
+    admob.build_post_data()
+    return admob.fetch()
