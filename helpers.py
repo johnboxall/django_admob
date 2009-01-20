@@ -14,10 +14,9 @@ PUBLISHER_ID = getattr(settings, 'ADMOB_PUBLISHER_ID')
 ANALYTICS_ID = getattr(settings, 'ADMOB_ANALYTICS_ID')
 COOKIE_PATH = getattr(settings, 'ADMOB_COOKIE_PATH', '/')
 COOKIE_DOMAIN = getattr(settings, 'ADMOB_COOKIE_DOMAIN', None)
+ENCODING = getattr(settings, 'ADMOB_ENCODING', 'utf-8')
+TEST = getattr(settings, 'ADMOB_TEST', True)
 
-# Default AdMob settings.
-DEFAULT_ENCODING = 'utf-8'  # SHIFTJS
-DEFAULT_TEST = True  # 
 ENDPOINT = "http://r.admob.com/ad_source.php"
 TIMEOUT = 1  # Timeout in seconds.
 PUBCODE_VERSION = "20090116-DJANGO"
@@ -60,8 +59,8 @@ class AdMob(object):
         """
         self.publisher_id = self.params.get('publisher_id', PUBLISHER_ID)
         self.analytics_id = self.params.get('analytics_id', ANALYTICS_ID)
-        self.encoding = self.params.get('encoding', DEFAULT_ENCODING)
-        self.test = self.params.get('test', DEFAULT_TEST)
+        self.encoding = self.params.get('encoding', ENCODING)
+        self.test = self.params.get('test', TEST)
 
         # Determine the type of request
         self.analytics_request = self.params.get("analytics_request", False)
@@ -110,24 +109,21 @@ class AdMob(object):
           'search': self.params.get('search'),           # => params[:search],
           'f': self.params.get('format', 'html'),        # => 'html',
           'title': self.params.get('title'),             # => params[:title],
-          'event': self.params.get('event')              # => params[:event]
+          'event': self.params.get('event'),             # => params[:event]
         }
 
-        ## Not sure what the Rails would end up sending there... so fake it!
-        # Add in headers
-        #  for k, v in self.request.META.iteritems():
-        #    if k not in IGNORE_HEADERS:
-        #        self.post_data["h[%s]" % k] = v
+        ### The Rails Gem adds a bunch of header parameters here - what are they
+        ### and where do you find their Django equivalents?
 
-        # Add in optional data
+        # Add in optional data        
+        if self.test:
+            self.post_data['m'] = 'test'
         if self.encoding:
             self.post_data['e'] = self.encoding
         if 'text_only' in self.params:
             self.post_data['y'] = 'text'
-        if self.test:
-            self.post_data['m'] = 'test'
             
-        # Don't send anything that's `None`
+        # Don't send anything that is `None`
         self.post_data = dict((k, v) for k, v in self.post_data.iteritems() if v is not None)        
 
     def fetch(self):
@@ -147,6 +143,15 @@ class AdMob(object):
                 raise e
         finally:
             socket.setdefaulttimeout(original_timeout)
+
+
+def admob(request, params=None, fail_silently=False):
+    "AdMob ad/analtyics"
+    params = params or {}
+    params.update({'analytics_request': True, 'ad_request': True})
+    admob = AdMob(request, params, fail_silently)
+    admob.build_post_data()
+    return admob.fetch()
 
 
 def admob_ad(request, params=None, fail_silently=False):
