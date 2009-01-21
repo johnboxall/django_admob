@@ -23,6 +23,7 @@ register.tag('admob', do_admobad)
 class AnalyticsMaybeAd(template.Node):
     """
     If condition then show an ad otherwise stick to analytics.
+    By default set to fail silently.
     
     """
     def __init__(self, var_name):
@@ -32,10 +33,10 @@ class AnalyticsMaybeAd(template.Node):
         context['request'].has_admob = True
         # Ad plus analytics
         if self.var.resolve(context):
-            return admob(context['request'], params=None, fail_silently=False)
+            return admob(context['request'], params=None, fail_silently=True)
         # Just an Ad
         else:
-            return admob_analytics(context['request'], params=None, fail_silently=False)
+            return admob_analytics(context['request'], params=None, fail_silently=True)
 
 def do_analyticsmaybead(parser, token):
     bits = token.contents.split()

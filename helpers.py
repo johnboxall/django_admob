@@ -9,11 +9,11 @@ from django.utils.http import cookie_date
 from django.utils.hashcompat import md5_constructor
 
 
-# Set these badboys in your settings file. 
+# Set these badboys in your settings file.
 PUBLISHER_ID = getattr(settings, 'ADMOB_PUBLISHER_ID')
 ANALYTICS_ID = getattr(settings, 'ADMOB_ANALYTICS_ID')
 COOKIE_PATH = getattr(settings, 'ADMOB_COOKIE_PATH', '/')
-COOKIE_DOMAIN = getattr(settings, 'ADMOB_COOKIE_DOMAIN', None)
+COOKIE_DOMAIN = getattr(settings, 'ADMOB_COOKIE_DOMAIN', settings.SESSION_COOKIE_DOMAIN)
 ENCODING = getattr(settings, 'ADMOB_ENCODING', 'utf-8')
 TEST = getattr(settings, 'ADMOB_TEST', True)
 
