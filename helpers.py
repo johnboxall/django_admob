@@ -80,7 +80,7 @@ class AdMob(object):
 
         # AdMob cookie - If it hasn't been set yet then set it.
         if 'admobuu' not in self.request.COOKIES:
-            if not hasattr(request, 'admobuu'):
+            if not hasattr(self.request, 'admobuu'):
                 self.admobuu = _admob_cookie_value(self.request)
                 self.request.admobuu = self.admobuu
             else:
@@ -183,7 +183,7 @@ def admob_ad(request, params=None, fail_silently=False):
     "Ad only."
     return _admob(request, dict(analytics_request=False, ad_request=True), fail_silently)
 
-def admob_analytics(request, fail_silently=False):
+def admob_analytics(request, params=None, fail_silently=False):
     "Analytics only."
     return _admob(request, dict(analytics_request=True, ad_request=False), fail_silently)
 
