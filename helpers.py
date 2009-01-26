@@ -135,7 +135,7 @@ class AdMob(object):
         socket.setdefaulttimeout(TIMEOUT)
         try:
             self.response = urllib2.urlopen(ENDPOINT, urllib.urlencode(self.post_data))            
-        except urllib2.HTTPError, e:
+        except urllib2.URLError, e:
             if self.fail_silently:
                 return ''
             else:
