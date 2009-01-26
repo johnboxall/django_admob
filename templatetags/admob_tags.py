@@ -25,16 +25,19 @@ class AnalyticsMaybeAd(template.Node):
     If condition then show an ad otherwise stick to analytics.
     By default set to fail silently.
     
+    usage:
+    {% admob_analytics_maybe_ad true_or_false_var %}
+    
     """
     def __init__(self, var_name):
         self.var = template.Variable(var_name)
         
     def render(self, context):
         context['request'].has_admob = True
-        # Ad plus analytics
+        # `var` resolves to `True` then put in an Ad.
         if self.var.resolve(context):
             return admob(context['request'], params=None, fail_silently=True)
-        # Just an Ad
+        # `var` resolves to `False` just put in Analytics.
         else:
             return admob_analytics(context['request'], params=None, fail_silently=True)
 

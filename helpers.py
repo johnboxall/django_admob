@@ -63,8 +63,8 @@ class AdMob(object):
         self.test = self.params.get('test', TEST)
 
         # Determine the type of request
-        self.analytics_request = self.params.get("analytics_request", False)
         self.ad_request = self.params.get("ad_request", False)
+        self.analytics_request = self.params.get("analytics_request", False)
         self.request_type = {
             (False, False): None,
             (True, False): 0,
@@ -135,12 +135,13 @@ class AdMob(object):
         socket.setdefaulttimeout(TIMEOUT)
         try:
             self.response = urllib2.urlopen(ENDPOINT, urllib.urlencode(self.post_data))            
-            return self.response.read()
         except urllib2.HTTPError, e:
             if self.fail_silently:
-                pass
+                return ''
             else:
-                raise e
+                raise
+        else:
+            return self.response.read()        
         finally:
             socket.setdefaulttimeout(original_timeout)
 
