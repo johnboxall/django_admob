@@ -20,16 +20,7 @@ TEST = getattr(settings, 'ADMOB_TEST', True)
 ENDPOINT = "http://r.admob.com/ad_source.php"
 TIMEOUT = 1  # Timeout in seconds.
 PUBCODE_VERSION = "20090116-DJANGO"
-
-# Need to be reworked for Django???
-IGNORE_HEADERS = [
-    'HTTP_PRAGMA', 
-    'HTTP_CACHE_CONTROL',
-    'HTTP_CONNECTION',
-    'HTTP_USER_AGENT',
-    'HTTP_COOKIE',
-]
-
+IGNORE = "HTTP_PRAGMA HTTP_CACHE_CONTROL HTTP_CONNECTION HTTP_USER_AGENT HTTP_COOKIE".split()
 
 class AdMobError(Exception):
     "Base class for AdMob exceptions."
@@ -110,10 +101,13 @@ class AdMob(object):
           'f': self.params.get('format', 'html'),        # => 'html',
           'title': self.params.get('title'),             # => params[:title],
           'event': self.params.get('event'),             # => params[:event]
+          'p': self.params.get('page', self.request.build_absolute_uri())  # ### Not in GEM.
         }
 
-        ### The Rails Gem adds a bunch of header parameters here - what are they
-        ### and where do you find their Django equivalents?
+        # Add in header data.
+        for header, value in self.request.META.iteritems():
+            if header.startswith("HTTP") and header not in IGNORE:
+                self.post_data["h[%s]" % header] = value
 
         # Add in optional data        
         if self.test:
@@ -134,7 +128,21 @@ class AdMob(object):
         original_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(TIMEOUT)
         try:
+        
+            print self.request.META
+        
+            print 'POSTING:'
+            import pprint
+            
+            print ENDPOINT
+            pprint.pprint(self.post_data)
             self.response = urllib2.urlopen(ENDPOINT, urllib.urlencode(self.post_data))            
+            print '---'
+            print self.response
+            print self.response.read()
+            print '---'
+
+
         except urllib2.URLError, e:
             if self.fail_silently:
                 return ''

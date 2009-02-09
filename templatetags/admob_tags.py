@@ -34,10 +34,10 @@ class AnalyticsMaybeAd(template.Node):
         
     def render(self, context):
         context['request'].has_admob = True
-        # `var` resolves to `True` then put in an Ad.
+        # If var is True then show an Ad.
         if self.var.resolve(context):
             return admob(context['request'], params=None, fail_silently=True)
-        # `var` resolves to `False` just put in Analytics.
+        # Otherwise just make an analytics request.
         else:
             return admob_analytics(context['request'], params=None, fail_silently=True)
 
