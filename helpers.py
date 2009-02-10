@@ -30,7 +30,6 @@ class AdMob(object):
     Handles requests for ads/analytics from AdMob.
     
     """
-
     def __init__(self, request, params=None, fail_silently=False):
         """
         `request` - a Django HttpRequest object
@@ -75,28 +74,28 @@ class AdMob(object):
             self.admobuu = self.request.COOKIES['admobuu']
         
         self.post_data = {
-          'rt': self.request_type,                              # => request_type
-          'z': time.time(),                                     # => Time.now.getutc.to_f        
-          'u': self.request.META.get('HTTP_USER_AGENT'),        # => request.user_agent,
-          'i': self.request.META.get('REMOTE_ADDR'),            # => request.remote_ip,
-          'p': self.request.build_absolute_uri(),               # => request.request_uri,
-          't': self.admob_session_id,                           # => MD5.hexdigest(session_id),
-          'v': PUBCODE_VERSION,                                 # => PUBCODE_VERSION,
-          'o': self.admobuu,                                    # => request.cookies['admobuu'][0] || request.env['admobuu'],
-          's': self.params.get('publisher_id', PUBLISHER_ID),   # => publisher_id,
-          'a': self.params.get('analytics_id', ANALYTICS_ID),   # => analytics_id,
-          'ma': self.params.get('markup'),                      # => params[:markup],
-          'd[pc]': self.params.get('postal_code'),              # => params[:postal_code],
-          'd[ac]': self.params.get('area_code'),                # => params[:area_code],
-          'd[coord]': self.params.get('coordinates'),           # => params[:coordinates],
-          'd[dob]': self.params.get('dob'),                     # => params[:dob],
-          'd[gender]': self.params.get('gender'),               # => params[:gender],
-          'k': self.params.get('keywords') ,                    # => params[:keywords],
-          'search': self.params.get('search'),                  # => params[:search],
-          'f': self.params.get('format', 'html'),               # => 'html',
-          'title': self.params.get('title'),                    # => params[:title],
-          'event': self.params.get('event'),                    # => params[:event]
-          'p': self.params.get('page', self.request.build_absolute_uri())  # ### Not in GEM.
+          'rt': self.request_type,
+          'z': time.time(),
+          'u': self.request.META.get('HTTP_USER_AGENT'),
+          'i': self.request.META.get('REMOTE_ADDR'),
+          'p': self.request.build_absolute_uri(),
+          't': self.admob_session_id,
+          'v': PUBCODE_VERSION,
+          'o': self.admobuu,
+          's': self.params.get('publisher_id', PUBLISHER_ID),
+          'a': self.params.get('analytics_id', ANALYTICS_ID),
+          'ma': self.params.get('markup'),
+          'd[pc]': self.params.get('postal_code'),
+          'd[ac]': self.params.get('area_code'),
+          'd[coord]': self.params.get('coordinates'),
+          'd[dob]': self.params.get('dob'),
+          'd[gender]': self.params.get('gender'),
+          'k': self.params.get('keywords'),
+          'search': self.params.get('search'),
+          'f': self.params.get('format', 'html'),
+          'title': self.params.get('title'),
+          'event': self.params.get('event'),
+          'p': self.params.get('page', self.request.build_absolute_uri())
         }
 
         # Add in header data.
@@ -122,24 +121,11 @@ class AdMob(object):
         Fetch the AdMob resource using urllib2.urlopen.
         
         """
+        # Python 2.5 comptabile.
         original_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(TIMEOUT)
         try:
-        
-            print self.request.META
-        
-            print 'POSTING:'
-            import pprint
-            
-            print ENDPOINT
-            pprint.pprint(self.post_data)
             self.response = urllib2.urlopen(ENDPOINT, urllib.urlencode(self.post_data))            
-            print '---'
-            print self.response
-            print self.response.read()
-            print '---'
-
-
         except urllib2.URLError, e:
             if self.fail_silently:
                 return ''
