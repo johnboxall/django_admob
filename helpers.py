@@ -113,7 +113,7 @@ class AdMob(object):
         if 'text_only' in self.params:
             self.post_data['y'] = 'text'
             
-        # Don't send anything that is `None`
+        # Don't send anything that is None.
         self.post_data = dict((k, v) for k, v in self.post_data.iteritems() if v is not None)        
 
     def fetch(self):
