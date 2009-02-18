@@ -52,3 +52,5 @@ Technicals:
 `admob.middleware.AdMobMiddleware` is needed because AdMob uses cookies to help track users. The middleware steps in at the `process_response` phase and looks if any AdMob actions happened by checking if `request.has_admob = True`. If so it sets an AdMob cookie on the response.
 
 Secondly there is some stuff going on with `request.admobuu` - this is the value that the AdMob cookie will eventually have. It's also needed for the AdMob interactions - so we might end up calculating it early and storing it in `request.admobuu` for later use in the middleware.
+
+If you are caching responses with AdMob ads be sure to remove the 'admobuu' attribute from requests so it will be recalculated?
