@@ -52,7 +52,6 @@ class AdMob(object):
         self.build_post_data()
         return self._fetch()
 
-
     def build_post_data(self):
         """
         Builds the post data from params and default settings.
@@ -151,9 +150,9 @@ class AdMob(object):
         socket.setdefaulttimeout(TIMEOUT)
         try:
             self.response = urllib2.urlopen(ENDPOINT, urllib.urlencode(self.post_data))
-            print 'sending data...'
-            import pprint
-            pprint.pprint(self.post_data)
+            # print 'Making AdMob Request:'
+            # import pprint
+            # pprint.pprint(self.post_data)
         except urllib2.URLError, e:
             if self.fail_silently:
                 return ''
@@ -176,7 +175,6 @@ def cookie_value(request):
         request.META.get('REMOTE_ADDR', ''),
         time.time()
     )
-    print "COOKIE_VALUE: %s" % s
     return md5_constructor(s).hexdigest()
 
 def set_cookie(request, response, params=None):
