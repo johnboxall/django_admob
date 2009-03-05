@@ -1,13 +1,13 @@
 import time
 import socket
 import random
-import urllib
 import urllib2
 from string import split as L
 
 from django.conf import settings
 from django.utils.http import cookie_date
 from django.utils.hashcompat import md5_constructor
+from django.utils.http import urlencode
 
 
 # Set these badboys in your settings file.
@@ -149,7 +149,7 @@ class AdMob(object):
         original_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(TIMEOUT)
         try:
-            self.response = urllib2.urlopen(ENDPOINT, urllib.urlencode(self.post_data))
+            self.response = urllib2.urlopen(ENDPOINT, urlencode(self.post_data))
             # print 'Making AdMob Request:'
             # import pprint
             # pprint.pprint(self.post_data)
@@ -205,7 +205,7 @@ def analytics(request, params=None, fail_silently=False):
     params = params or {}
     params.update({"analytics_request": True, "ad_request": False})
     admob = AdMob(request, params, fail_silently)
-    return admob.fetch()
+    admob.fetch()
     
 def ad(request, params=None, fail_silently=False):
     params = params or {}
