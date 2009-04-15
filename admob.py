@@ -1,7 +1,4 @@
-import time
-import socket
-import random
-import urllib2
+import time, socket, random, urllib2
 from string import split as L
 
 from django.conf import settings
@@ -20,7 +17,7 @@ TEST = getattr(settings, 'ADMOB_TEST', True)
 
 ENDPOINT = "http://r.admob.com/ad_source.php"
 TIMEOUT = 1  # Timeout in seconds.
-PUBCODE_VERSION = "20090217-DJANGO"
+PUBCODE_VERSION = "20090414-DJANGO"
 IGNORE = L("HTTP_PRAGMA HTTP_CACHE_CONTROL HTTP_CONNECTION HTTP_USER_AGENT HTTP_COOKIE")
 
 
@@ -118,11 +115,11 @@ class AdMob(object):
             self.post_data.update({
                 's': self.params.get('publisher_id', PUBLISHER_ID),  # admob publisher id
                 'ma': self.params.get('markup'),  # xhtml / wml
-                'f': self.params.get('format'), # html / html_no_js
+                'f': self.params.get('format'),  # html / html_no_js
                 'd[pc]': self.params.get('postal_code'),
                 'd[ac]': self.params.get('area_code'),
                 'd[coord]': self.params.get('coordinates'),  # lat,lng
-                'd[dob]': self.params.get('dob'),  # date of birth
+                'd[dob]': self.params.get('dob'), # date of birth
                 'd[gender]': self.params.get('gender'),
                 'k': self.params.get('keywords'),  # space seperated keywords
                 'search': self.params.get('search')  # visitor search term
@@ -145,14 +142,15 @@ class AdMob(object):
         Fetch the AdMob resource using urllib2.urlopen.
         
         """
-        # Python 2.5 comptabile.
+        # Python2.5 comptabile.
         original_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(TIMEOUT)
         try:
             self.response = urllib2.urlopen(ENDPOINT, urlencode(self.post_data))
-            # print 'Making AdMob Request:'
-            # import pprint
-            # pprint.pprint(self.post_data)
+            if self.test:
+                print 'ADMOB: Making Request...'
+                import pprint
+                pprint.pprint(self.post_data)
         except urllib2.URLError, e:
             if self.fail_silently:
                 return ''
@@ -166,7 +164,7 @@ class AdMob(object):
 
 def cookie_value(request):
     """
-    Construct an AdMob cookie value from user-agent and ip.
+    Construct an AdMob cookie value from User-Agent and IP.
 
     """
     s = "%f%s%s%f" % (
@@ -177,27 +175,19 @@ def cookie_value(request):
     )
     return md5_constructor(s).hexdigest()
 
-def set_cookie(request, response, params=None):
+def set_cookie(request, response, domain=None, path=None):
     """
     Given request set and AdMob cookie on response.
     
     """
-    params = params or {}
-
-    # Don't make a new cookie if one already exists
+    # Don't make a new cookie if one exists.
     if 'admobuu' in request.COOKIES:
         return response
     
-    # Make a new cookie
-    if hasattr(request, 'admobuu'):
-        value = request.admobuu
-    else: 
-        value = cookie_value(request)
-
-    # Set the cookie on the response.
+    value = getattr(request, 'admobuu', cookie_value(request))
     expires = cookie_date(0x7fffffff)  # End of 32 bit time.
-    path = params.get('cookie_path', COOKIE_PATH)
-    domain = params.get('cookie_domain', COOKIE_DOMAIN)
+    path = path or COOKIE_PATH
+    domain = domain or COOKIE_DOMAIN
     response.set_cookie('admobuu', value, expires=expires, path=path, domain=domain)
     return response
             
