@@ -1,10 +1,12 @@
-import time, socket, random, urllib2
+import time
+import socket
+import random
+import urllib2
 from string import split as L
 
 from django.conf import settings
-from django.utils.http import cookie_date
+from django.utils.http import cookie_date, urlencode
 from django.utils.hashcompat import md5_constructor
-from django.utils.http import urlencode
 
 
 # Set these badboys in your settings file.
@@ -17,7 +19,7 @@ TEST = getattr(settings, 'ADMOB_TEST', True)
 
 ENDPOINT = "http://r.admob.com/ad_source.php"
 TIMEOUT = 1  # Timeout in seconds.
-PUBCODE_VERSION = "20090414-DJANGO"
+PUBCODE_VERSION = "20090601-DJANGO"
 IGNORE = L("HTTP_PRAGMA HTTP_CACHE_CONTROL HTTP_CONNECTION HTTP_USER_AGENT HTTP_COOKIE")
 
 
@@ -27,33 +29,26 @@ class AdMobError(Exception):
 class AdMob(object):
     """
     Handles requests for ads/analytics from AdMob.
-    
     """
     def __init__(self, request, params=None, fail_silently=False):
         """
         * request - HttpRequest object
         * params - dict of parameters to pass to AdMob
-        * fail_silently - set to True to raise HTTP exceptions
-        
+        * fail_silently - set to True to raise HTTP exceptions    
         """
         self.request = request
+        self.request.has_admob = True
         self.params = params or {}
         self.fail_silently = fail_silently
         self.session_id = getattr(request.session, 'session_key', None)
 
     def fetch(self):
-        """
-        Make an AdMob request!
-        
-        """
+        """Make an AdMob request!"""
         self.build_post_data()
         return self._fetch()
 
     def build_post_data(self):
-        """
-        Builds the post data from params and default settings.
-        
-        """
+        """Builds the post data from params and default settings."""
         # Determine the type of request
         self.ad_request = self.params.get("ad_request", False)
         self.analytics_request = self.params.get("analytics_request", False)
@@ -71,14 +66,13 @@ class AdMob(object):
             self.admob_session_id = None
 
         # AdMob cookie - If it hasn't been set yet then set it.
-        if 'admobuu' not in self.request.COOKIES:
-            if not hasattr(self.request, 'admobuu'):
-                self.admobuu = cookie_value(self.request)
-                self.request.admobuu = self.admobuu
-            else:
-                self.admobuu = self.request.admobuu
-        else:
+        if 'admobuu' in self.request.COOKIES:
             self.admobuu = self.request.COOKIES['admobuu']
+        else:
+            if not hasattr(self.request, 'admobuu'):
+                self.admobuu = self.request.admobuu = cookie_value(self.request)
+            else:
+                self.admobuu = self.request.admobuu            
 
         # Shared parameters.
         self.post_data = {
@@ -138,10 +132,7 @@ class AdMob(object):
         self.post_data = dict((k, v) for k, v in self.post_data.iteritems() if v is not None)
 
     def _fetch(self):
-        """
-        Fetch the AdMob resource using urllib2.urlopen.
-        
-        """
+        """Fetch the AdMob resource using urllib2.urlopen."""
         # Python2.5 comptabile.
         original_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(TIMEOUT)
@@ -163,31 +154,22 @@ class AdMob(object):
 
 
 def cookie_value(request):
-    """
-    Construct an AdMob cookie value from User-Agent and IP.
-
-    """
+    """Construct a unique AdMob cookie value from User-Agent and IP."""
     s = "%f%s%s%f" % (
         random.random(),
         request.META.get('HTTP_USER_AGENT', ''),
         request.META.get('REMOTE_ADDR', ''),
-        time.time()
-    )
+        time.time())
     return md5_constructor(s).hexdigest()
 
-def set_cookie(request, response, domain=None, path=None):
-    """
-    Given request set and AdMob cookie on response.
-    
-    """
+def set_cookie(request, response, domain=COOKIE_DOMAIN, path=COOKIE_PATH):
+    """Given request set and AdMob cookie on response.    """
     # Don't make a new cookie if one exists.
-    if 'admobuu' in request.COOKIES:
+    if 'admobuu' in request.COOKIES or 'admobuu' in response.cookies:
         return response
     
     value = getattr(request, 'admobuu', cookie_value(request))
     expires = cookie_date(0x7fffffff)  # End of 32 bit time.
-    path = path or COOKIE_PATH
-    domain = domain or COOKIE_DOMAIN
     response.set_cookie('admobuu', value, expires=expires, path=path, domain=domain)
     return response
             
